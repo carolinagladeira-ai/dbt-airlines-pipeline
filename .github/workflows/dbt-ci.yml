@@ -6,7 +6,6 @@ on:
 
 env:
   DBT_PROFILES_DIR: ./
-  DBT_TARGET: ci
 
 jobs:
   validate:
@@ -23,16 +22,30 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install sqlfluff
+        run: pip install dbt-duckdb sqlfluff
 
       - name: "Gate 1 -- Lint SQL"
         run: sqlfluff lint models/ tests/ --dialect postgres
 
-      - name: "Gate 2 -- Compile and run modified models"
-        run: echo "Gate 2: PASSED (demo mode -- requires database connection)"
+      - name: "Gate 2 -- Build models"
+        run: |
+          dbt deps
+          dbt seed
+          dbt run
 
-      - name: "Gate 3 -- Check source freshness"
-        run: echo "Gate 3: PASSED (demo mode -- requires database connection)"
+      - name: "Gate 3 -- Run tests"
+        run: dbt test
 
-      - name: "Gate 4 -- Run tests on modified models"
-        run: echo "Gate 4: PASSED (demo mode -- requires database connection)"
+  # --------------------------------------------------------------------------
+  # Gate 4 -- Source Freshness
+  # --------------------------------------------------------------------------
+  # This gate does NOT run on pull requests. Source freshness validates the
+  # state of data in the warehouse, not the quality of code changes.
+  # It belongs in the orchestration layer (Airflow, dbt Cloud, cron) and runs
+  # on a schedule before production builds:
+  #
+  #   dbt source freshness
+  #
+  # If the most recent loaded_at timestamp in a source table is older than
+  # the configured threshold, the pipeline stops before building models
+  # on stale data. See models/sources.yml for threshold configuration.

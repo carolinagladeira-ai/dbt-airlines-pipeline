@@ -2,11 +2,6 @@ dbt_airlines:
   target: ci
   outputs:
     ci:
-      type: postgres
-      host: "{{ env_var('DBT_HOST', 'localhost') }}"
-      port: 5432
-      user: "{{ env_var('DBT_USER', 'dbt') }}"
-      password: "{{ env_var('DBT_PASSWORD', 'dbt') }}"
-      dbname: "{{ env_var('DBT_DATABASE', 'airlines') }}"
-      schema: "{{ env_var('DBT_SCHEMA', 'ci') }}"
+      type: duckdb
+      path: "dbt_airlines.duckdb"
       threads: 4

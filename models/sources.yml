@@ -2,8 +2,9 @@ version: 2
 
 sources:
   - name: airlines_raw
-    description: Raw airline operations data
-    schema: raw
+    description: Raw airline operations data loaded from seed CSV files
+    schema: main
+    
     freshness:
       warn_after:
         count: 24
@@ -12,6 +13,7 @@ sources:
         count: 48
         period: hour
     loaded_at_field: _loaded_at
+
     tables:
       - name: airports
         description: US airport reference data

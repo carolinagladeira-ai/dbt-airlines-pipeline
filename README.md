@@ -13,18 +13,59 @@ A dbt project modeling US airline flight data with:
 - **Custom tests**: revenue validation, flight count range checks
 - **GitHub Actions CI pipeline** with 4 validation gates
 
-## CI Pipeline: The Four Gates
+## The Four Gates
 
-Every pull request triggers the CI pipeline automatically:
+Data pipelines are protected by four validation gates. Three of them validate **code** and run on every pull request. The fourth validates **data** and runs on a schedule in the orchestration layer.
+
+### CI Gates (run on every PR)
 
 | Gate | What It Does | Tool |
 |------|-------------|------|
 | Gate 1 | **Lint SQL** -- enforces lowercase keywords, consistent formatting | SQLFluff |
-| Gate 2 | **Compile & run models** -- checks that modified models build correctly | dbt |
-| Gate 3 | **Source freshness** -- verifies source data is recent enough | dbt |
-| Gate 4 | **Run tests** -- executes schema and custom tests on modified models | dbt |
+| Gate 2 | **Build models** -- seeds data, compiles and runs all models | dbt + DuckDB |
+| Gate 3 | **Run tests** -- executes schema tests and custom business logic tests | dbt |
 
-> **Note**: In this exercise, only Gate 1 (linting) runs for real. Gates 2-4 are stubbed because they require a database connection. The lint gate is the one that will catch your deliberate failure.
+### Orchestration Gate (runs on a schedule, before production builds)
+
+| Gate | What It Does | Tool |
+|------|-------------|------|
+| Gate 4 | **Source freshness** -- checks that source tables have been loaded recently | dbt |
+
+Gate 4 does not run in CI because it validates the state of data in the warehouse, not the quality of a code change. In production, it runs before `dbt build` via Airflow, dbt Cloud, or a cron job. If the most recent data is older than the configured threshold, the pipeline stops before building models on stale data. See `models/sources.yml` for the threshold configuration.
+
+---
+
+## Running Locally
+
+### Option A: Docker (no Python setup needed)
+
+```bash
+docker build -t dbt-airlines-pipeline .
+```
+
+The build runs the full pipeline -- seeds, models, and tests. If the image builds successfully, everything works.
+
+### Option B: Python
+
+Requires Python 3.11+.
+
+```bash
+pip install dbt-duckdb sqlfluff
+dbt deps                           # install dbt_utils
+dbt seed                           # load CSV data into DuckDB
+dbt run                            # build all 6 models
+dbt test                           # run all 22 tests
+sqlfluff lint models/ tests/       # lint all SQL files
+```
+
+Expected output:
+
+- `dbt seed` -- 3 seeds loaded (15 airlines, 49 airports, 1030 flights)
+- `dbt run` -- 6 models built (3 views, 3 tables)
+- `dbt test` -- 22 tests passed
+- `sqlfluff lint` -- "All Finished!" with no violations
+
+No database server required. DuckDB runs in-process and creates a local `dbt_airlines.duckdb` file (gitignored).
 
 ---
 

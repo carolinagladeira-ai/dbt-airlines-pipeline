@@ -37,20 +37,23 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('stg_airlines')
-              field: airline_code
+              arguments:
+                to: ref('stg_airlines')
+                field: airline_code
       - name: origin_airport
         tests:
           - not_null
           - relationships:
-              to: ref('stg_airports')
-              field: iata_code
+              arguments:
+                to: ref('stg_airports')
+                field: iata_code
       - name: destination_airport
         tests:
           - not_null
           - relationships:
-              to: ref('stg_airports')
-              field: iata_code
+              arguments:
+                to: ref('stg_airports')
+                field: iata_code
 
   - name: dim_airport
     description: Airport dimension with key attributes
