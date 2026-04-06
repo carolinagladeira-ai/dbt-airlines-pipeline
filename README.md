@@ -71,83 +71,75 @@ No database server required. DuckDB runs in-process and creates a local `dbt_air
 
 ## Exercise Instructions
 
+Everything below can be done entirely from the GitHub web UI -- no local setup required.
+
 ### Phase 1: Setup
 
 1. **Fork this repository**
-   - Click "Fork" in the top right of this page
-   - Keep all defaults, click "Create fork"
+   - Click **"Fork"** in the top right of this page
+   - Keep all defaults, click **"Create fork"**
 
 2. **Enable Actions on your fork**
    - Go to your fork's **Settings > Actions > General**
    - Select **"Allow all actions and reusable workflows"**
    - Click **Save**
 
-3. **Clone your fork locally**
-   ```bash
-   git clone https://github.com/YOUR-USERNAME/dbt-airlines-pipeline.git
-   cd dbt-airlines-pipeline
-   ```
-
 ### Phase 2: Happy Path (make a change, see CI pass)
 
-4. **Create a feature branch**
-   ```bash
-   git checkout -b feature/add-country-code
-   ```
+3. **Create a branch and edit a file**
+   - Navigate to `models/dimensions/dim_airport.sql`
+   - Click the **pencil icon** (Edit this file)
+   - GitHub will prompt you to create a branch -- name it `feature/add-country-code`
+   - Add `country` after `state` so the file looks like:
+     ```sql
+     select
+         iata_code,
+         airport_name,
+         city,
+         state,
+         country
+     from airports
+     ```
+   - Click **"Commit changes"**
 
-5. **Edit `models/dimensions/dim_airport.sql`** -- add `country` after `state`:
-   ```sql
-   select
-       iata_code,
-       airport_name,
-       city,
-       state,
-       country
-   from airports
-   ```
-
-6. **Commit and push**
-   ```bash
-   git add models/dimensions/dim_airport.sql
-   git commit -m "Add country to airport dimension"
-   git push origin feature/add-country-code
-   ```
-
-7. **Open a Pull Request**
-   - Go to your fork on GitHub
-   - Click "Compare & pull request"
+4. **Open a Pull Request**
+   - GitHub will show a banner to create a PR from your new branch -- click **"Compare & pull request"**
    - **Important**: Make sure the base repository is **your fork**, not the upstream repo
-   - Create the PR
+   - Click **"Create pull request"**
 
-8. **Watch CI run** -- go to the "Checks" tab and watch all four gates pass.
+5. **Watch CI run** -- go to the **"Checks"** tab on the PR and watch all three gates pass.
 
 ### Phase 3: Deliberate Failure (break the lint gate)
 
-9. **Edit `models/dimensions/dim_airport.sql`** -- change `select` to `SELECT` (uppercase):
-   ```sql
-   SELECT
-       iata_code,
-       airport_name,
-       city,
-       state,
-       country
-   from airports
-   ```
+6. **Edit the file again from the PR branch**
+   - On the PR page, go to **"Files changed"** > click the **three dots (...)** on `dim_airport.sql` > **"Edit file"**
+   - Change `select` to `SELECT` (uppercase):
+     ```sql
+     SELECT
+         iata_code,
+         airport_name,
+         city,
+         state,
+         country
+     from airports
+     ```
+   - Click **"Commit changes"** (make sure you are committing to the `feature/add-country-code` branch)
 
-10. **Commit and push**
-    ```bash
-    git add models/dimensions/dim_airport.sql
-    git commit -m "Test: introduce linting violation"
-    git push origin feature/add-country-code
-    ```
+7. **Watch it fail** -- the commit updates your open PR. Gate 1 (Lint) will fail with a red X. Click the failed check to see SQLFluff's error message.
 
-11. **Watch it fail** -- the push updates your open PR. Gate 1 (Lint) will fail with a red X. Click the failed check to see SQLFluff's error message.
+8. **Fix and verify** -- edit the file again, change `SELECT` back to `select`, and commit. Watch CI go green again.
 
-12. **Fix and verify** -- change `SELECT` back to `select`, commit, push. Watch CI go green again.
+### Phase 4: Run the pipeline manually
 
-### Phase 4: Bonus (if time permits)
+9. **Trigger the workflow without a PR**
+   - Go to the **"Actions"** tab in your fork
+   - Select the **"dbt CI"** workflow on the left
+   - Click **"Run workflow"**, pick a branch, and click the green **"Run workflow"** button
+   - Watch the run complete
 
-13. Try adding a column to `dim_airport.sql` that does not exist in `stg_airports.sql`. What happens when you push?
+### Phase 5: Bonus (if time permits)
+
+10. Try editing `dim_airport.sql` to add a column that does not exist in `stg_airports.sql`. What happens when you push?
 
 ---
 
@@ -156,11 +148,8 @@ No database server required. DuckDB runs in-process and creates a local `dbt_air
 ### Actions not triggering on my fork
 GitHub Actions are disabled by default on forks. Go to **Settings > Actions > General > "Allow all actions and reusable workflows"** and save.
 
-### Permission denied on push
-Use `gh auth login` (GitHub CLI) or set up a personal access token at **github.com > Settings > Developer settings > Personal access tokens**.
-
 ### PR targets the upstream repo instead of my fork
-When creating the PR, change the **base repository** dropdown to your own fork. Or use the CLI: `gh pr create --base main --head feature/add-country-code`.
+When creating the PR, change the **base repository** dropdown to your own fork.
 
 ### SQLFluff not finding violations
 Make sure the `SELECT` keyword is in actual SQL code (not a comment), and that you saved the file before committing.
