@@ -6,5 +6,6 @@ select
     iata_code,
     airport_name,
     city,
-    state
+    state,
+    country
 from airports
